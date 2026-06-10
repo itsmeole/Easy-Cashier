@@ -1,0 +1,6 @@
+{
+  "name": "Easy Cashier",
+  "description": "A simple, lightweight, and fast cashier application with room database. Features product management (categories & modifiers), checkout with receipt generation, and transaction reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

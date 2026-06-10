@@ -93,6 +93,52 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         }
     }
 
+    fun editCategory(oldName: String, newName: String) {
+        val oldTrimmed = oldName.trim()
+        val newTrimmed = newName.trim()
+        if (oldTrimmed.isEmpty() || newTrimmed.isEmpty() || oldTrimmed == newTrimmed) return
+        
+        // Update in custom categories list
+        val currentCategories = _customCategories.value.toMutableList()
+        val index = currentCategories.indexOf(oldTrimmed)
+        if (index != -1) {
+            currentCategories[index] = newTrimmed
+        } else {
+            currentCategories.add(newTrimmed)
+        }
+        _customCategories.value = currentCategories.distinct()
+        
+        // Update all products in DB that have this category
+        viewModelScope.launch {
+            val allProds = repository.allProducts.first()
+            allProds.forEach { product ->
+                if (product.category.equals(oldTrimmed, ignoreCase = true)) {
+                    repository.updateProduct(product.copy(category = newTrimmed))
+                }
+            }
+        }
+    }
+
+    fun deleteCategory(categoryName: String) {
+        val trimmed = categoryName.trim()
+        val currentCategories = _customCategories.value.filter { !it.equals(trimmed, ignoreCase = true) }
+        _customCategories.value = currentCategories
+        
+        val fallback = if (currentCategories.isNotEmpty()) currentCategories.first() else "Lainnya"
+        if (!_customCategories.value.any { it.equals(fallback, ignoreCase = true) }) {
+            _customCategories.value = _customCategories.value + fallback
+        }
+        
+        viewModelScope.launch {
+            val allProds = repository.allProducts.first()
+            allProds.forEach { product ->
+                if (product.category.equals(trimmed, ignoreCase = true)) {
+                    repository.updateProduct(product.copy(category = fallback))
+                }
+            }
+        }
+    }
+
     // --- SHOPPING CART STATE ---
     private val _cartItems = MutableStateFlow<List<CartItemModel>>(emptyList())
     val cartItems = _cartItems.asStateFlow()

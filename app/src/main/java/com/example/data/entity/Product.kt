@@ -8,6 +8,6 @@ data class Product(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val price: Double,
-    val category: String, // e.g. "Makanan", "Minuman", "Snack", "Lainnya"
-    val modifierMenu: String // e.g. "Normal, Less Sugar, No Sugar" or "Pedas, Sedang, Biasa"
+    val category: String, 
+    val modifierMenu: String
 )

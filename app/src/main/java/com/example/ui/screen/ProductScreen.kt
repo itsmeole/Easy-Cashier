@@ -112,6 +112,9 @@ fun ProductScreen(
     var showDeleteCategoryConfirmation by remember { mutableStateOf(false) }
     var deletingCategoryName by remember { mutableStateOf("") }
 
+    var showDeleteProductConfirmation by remember { mutableStateOf(false) }
+    var deletingProduct by remember { mutableStateOf<Product?>(null) }
+
     // Form States for Products
     var name by remember { mutableStateOf("") }
     var priceText by remember { mutableStateOf("") }
@@ -360,7 +363,10 @@ fun ProductScreen(
                                                 )
                                             }
                                             IconButton(
-                                                onClick = { viewModel.deleteProduct(product) },
+                                                onClick = {
+                                                    deletingProduct = product
+                                                    showDeleteProductConfirmation = true
+                                                },
                                                 modifier = Modifier.testTag("delete_product_${product.id}")
                                             ) {
                                                 Icon(
@@ -855,6 +861,67 @@ fun ProductScreen(
                 }
             }
         )
+    }
+
+    // Delete Product Confirmation Dialog (Konfirmasi Hapus Produk)
+    if (showDeleteProductConfirmation) {
+        val productToDelete = deletingProduct
+        if (productToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteProductConfirmation = false },
+                title = {
+                    Text(
+                        text = "Konfirmasi Hapus Produk",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Color.Red
+                    )
+                },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = "Apakah Anda yakin ingin menghapus produk \"${productToDelete.name}\"?",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "Tindakan ini tidak dapat dibatalkan.",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteProduct(productToDelete)
+                            showDeleteProductConfirmation = false
+                            deletingProduct = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Hapus", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = {
+                            showDeleteProductConfirmation = false
+                            deletingProduct = null
+                        },
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Batal")
+                    }
+                }
+            )
+        }
     }
 }
 

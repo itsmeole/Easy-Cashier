@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.entity.Product
 import com.example.data.entity.Transaction
 import com.example.data.entity.TransactionItem
+import com.example.data.entity.Category
 import com.example.data.repository.CartItemModel
 import com.example.data.repository.CashierRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -47,8 +49,13 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
     }
 
     // --- DYNAMIC CATEGORIES ---
-    private val _customCategories = MutableStateFlow<List<String>>(listOf("Makanan", "Minuman", "Camilan", "Lainnya"))
-    val customCategories = _customCategories.asStateFlow()
+    val customCategories: StateFlow<List<String>> = repository.allCategories
+        .map { list -> list.map { it.name } }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf("Makanan", "Minuman", "Camilan", "Lainnya")
+        )
 
     // --- PRODUCT SEARCH & LIST STATE ---
     private val _searchQuery = MutableStateFlow("")
@@ -76,7 +83,7 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
 
     val allCategories: StateFlow<List<String>> = combine(
         products,
-        _customCategories
+        customCategories
     ) { productList, customList ->
         val dbCategories = productList.map { it.category }.filter { it.isNotEmpty() }
         (customList + dbCategories).distinct()
@@ -88,8 +95,13 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
 
     fun addCategory(categoryName: String) {
         val trimmed = categoryName.trim()
-        if (trimmed.isNotEmpty() && !_customCategories.value.contains(trimmed)) {
-            _customCategories.value = _customCategories.value + trimmed
+        if (trimmed.isNotEmpty()) {
+            viewModelScope.launch {
+                val exists = repository.allCategories.first().any { it.name.equals(trimmed, ignoreCase = true) }
+                if (!exists) {
+                    repository.insertCategory(Category(trimmed))
+                }
+            }
         }
     }
 
@@ -98,18 +110,10 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         val newTrimmed = newName.trim()
         if (oldTrimmed.isEmpty() || newTrimmed.isEmpty() || oldTrimmed == newTrimmed) return
         
-        // Update in custom categories list
-        val currentCategories = _customCategories.value.toMutableList()
-        val index = currentCategories.indexOf(oldTrimmed)
-        if (index != -1) {
-            currentCategories[index] = newTrimmed
-        } else {
-            currentCategories.add(newTrimmed)
-        }
-        _customCategories.value = currentCategories.distinct()
-        
-        // Update all products in DB that have this category
         viewModelScope.launch {
+            repository.updateCategoryName(oldTrimmed, newTrimmed)
+            
+            // Update all products in DB that have this category
             val allProds = repository.allProducts.first()
             allProds.forEach { product ->
                 if (product.category.equals(oldTrimmed, ignoreCase = true)) {
@@ -121,15 +125,15 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
 
     fun deleteCategory(categoryName: String) {
         val trimmed = categoryName.trim()
-        val currentCategories = _customCategories.value.filter { !it.equals(trimmed, ignoreCase = true) }
-        _customCategories.value = currentCategories
-        
-        val fallback = if (currentCategories.isNotEmpty()) currentCategories.first() else "Lainnya"
-        if (!_customCategories.value.any { it.equals(fallback, ignoreCase = true) }) {
-            _customCategories.value = _customCategories.value + fallback
-        }
-        
         viewModelScope.launch {
+            repository.deleteCategory(Category(trimmed))
+            
+            val remainingCats = repository.allCategories.first().map { it.name }
+            val fallback = if (remainingCats.isNotEmpty()) remainingCats.first() else "Lainnya"
+            if (!remainingCats.any { it.equals(fallback, ignoreCase = true) }) {
+                repository.insertCategory(Category(fallback))
+            }
+            
             val allProds = repository.allProducts.first()
             allProds.forEach { product ->
                 if (product.category.equals(trimmed, ignoreCase = true)) {
@@ -349,10 +353,18 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         }
     }
 
-    // --- SEED DATABASE OF DEFAULT PRODUCTS ---
+    // --- SEED DATABASE OF DEFAULT PRODUCTS & CATEGORIES ---
     init {
         viewModelScope.launch {
             try {
+                val cats = repository.allCategories.first()
+                if (cats.isEmpty()) {
+                    repository.insertCategory(Category("Makanan"))
+                    repository.insertCategory(Category("Minuman"))
+                    repository.insertCategory(Category("Camilan"))
+                    repository.insertCategory(Category("Lainnya"))
+                }
+                
                 val list = repository.allProducts.first()
                 if (list.isEmpty()) {
                     repository.insertProduct(Product(name = "Kopi Susu Gula Aren", price = 18000.0, category = "Minuman", modifierMenu = "Normal, Sedikit Gula, Tanpa Gula"))

@@ -2,17 +2,30 @@ package com.example.data.repository
 
 import com.example.data.dao.ProductDao
 import com.example.data.dao.TransactionDao
+import com.example.data.dao.CategoryDao
 import com.example.data.entity.Product
 import com.example.data.entity.Transaction
 import com.example.data.entity.TransactionItem
+import com.example.data.entity.Category
 import kotlinx.coroutines.flow.Flow
 
 class CashierRepository(
     private val productDao: ProductDao,
-    private val transactionDao: TransactionDao
+    private val transactionDao: TransactionDao,
+    private val categoryDao: CategoryDao
 ) {
     val allProducts: Flow<List<Product>> = productDao.getAllProducts()
     val allTransactions: Flow<List<Transaction>> = transactionDao.getAllTransactions()
+    val allCategories: Flow<List<Category>> = categoryDao.getAllCategories()
+
+    suspend fun insertCategory(category: Category) =
+        categoryDao.insertCategory(category)
+
+    suspend fun deleteCategory(category: Category) =
+        categoryDao.deleteCategory(category)
+
+    suspend fun updateCategoryName(oldName: String, newName: String) =
+        categoryDao.updateCategoryName(oldName, newName)
 
     fun searchProducts(query: String): Flow<List<Product>> =
         productDao.searchProducts(query)

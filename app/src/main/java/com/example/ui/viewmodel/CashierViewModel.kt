@@ -54,7 +54,7 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = listOf("Makanan", "Minuman", "Camilan", "Lainnya")
+            initialValue = emptyList()
         )
 
     // --- PRODUCT SEARCH & LIST STATE ---
@@ -90,7 +90,7 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = listOf("Makanan", "Minuman", "Camilan", "Lainnya")
+        initialValue = emptyList()
     )
 
     fun addCategory(categoryName: String) {
@@ -353,31 +353,9 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         }
     }
 
-    // --- SEED DATABASE OF DEFAULT PRODUCTS & CATEGORIES ---
+    // --- NO SEED DATABASE ---
     init {
-        viewModelScope.launch {
-            try {
-                val cats = repository.allCategories.first()
-                if (cats.isEmpty()) {
-                    repository.insertCategory(Category("Makanan"))
-                    repository.insertCategory(Category("Minuman"))
-                    repository.insertCategory(Category("Camilan"))
-                    repository.insertCategory(Category("Lainnya"))
-                }
-                
-                val list = repository.allProducts.first()
-                if (list.isEmpty()) {
-                    repository.insertProduct(Product(name = "Kopi Susu Gula Aren", price = 18000.0, category = "Minuman", modifierMenu = "Normal, Sedikit Gula, Tanpa Gula"))
-                    repository.insertProduct(Product(name = "Nasi Goreng Spesial", price = 25000.0, category = "Makanan", modifierMenu = "Sedang, Pedas, Sangat Pedas"))
-                    repository.insertProduct(Product(name = "Kentang Goreng Keju", price = 15000.0, category = "Camilan", modifierMenu = "Saus Keju, Saus Sambal"))
-                    repository.insertProduct(Product(name = "Es Teh Manis", price = 6000.0, category = "Minuman", modifierMenu = "Manis, Sedikit Gula, Tawar"))
-                    repository.insertProduct(Product(name = "Ayam Penyet Crispy", price = 22000.0, category = "Makanan", modifierMenu = "Sambal Ijo, Sambal Bawang"))
-                    repository.insertProduct(Product(name = "Roti Bakar Cokelat", price = 14000.0, category = "Camilan", modifierMenu = "Cokelat Keju, Cokelat Saja"))
-                }
-            } catch (e: Exception) {
-                // Ignore seeding errors
-            }
-        }
+        // App starts with clean/empty product and category lists
     }
 
     // --- UTILITY FORMATTERS ---

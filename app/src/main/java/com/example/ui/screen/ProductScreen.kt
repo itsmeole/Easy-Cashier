@@ -82,6 +82,7 @@ fun ProductScreen(
     modifier: Modifier = Modifier
 ) {
     val products by viewModel.products.collectAsState()
+    val categoriesList by viewModel.customCategories.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var activeTab by remember { mutableStateOf(0) } // 0 = Produk, 1 = Kategori
 
@@ -118,7 +119,7 @@ fun ProductScreen(
     // Form States for Products
     var name by remember { mutableStateOf("") }
     var priceText by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Makanan") }
+    var category by remember { mutableStateOf("") }
     var modifierMenu by remember { mutableStateOf("") }
     
     var nameError by remember { mutableStateOf(false) }
@@ -128,7 +129,7 @@ fun ProductScreen(
         editingProduct = null
         name = ""
         priceText = ""
-        category = "Makanan"
+        category = categoriesList.firstOrNull() ?: ""
         modifierMenu = ""
         nameError = false
         priceError = false
@@ -384,7 +385,6 @@ fun ProductScreen(
                 }
             } else {
                 // ================== TAB: KATEGORI ==================
-                val categoriesList by viewModel.customCategories.collectAsState()
 
                 if (categoriesList.isEmpty()) {
                     Box(
@@ -501,7 +501,6 @@ fun ProductScreen(
 
     // Add / Edit Product Alert Dialog
     if (showDialog) {
-        val categoriesList by viewModel.customCategories.collectAsState()
         var expandedDropdown by remember { mutableStateOf(false) }
 
         AlertDialog(

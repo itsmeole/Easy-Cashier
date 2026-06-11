@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.PointOfSale
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.outlined.Assignment
@@ -124,17 +123,7 @@ fun MainScreen() {
             // Adaptive Navigation Rail for Expanded/Tablet viewport sizes
             if (isWideScreen) {
                 NavigationRail(
-                    modifier = Modifier.fillMaxHeight(),
-                    header = {
-                        Icon(
-                            imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = "App Logo",
-                            tint = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .padding(vertical = 24.dp)
-                                .size(32.dp)
-                        )
-                    }
+                    modifier = Modifier.fillMaxHeight()
                 ) {
                     navigationItems.forEach { screen ->
                         val isSelected = currentScreen.id == screen.id

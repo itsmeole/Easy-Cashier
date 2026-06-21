@@ -10,7 +10,7 @@ class CashierViewModelFactory(private val application: Application) : ViewModelP
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CashierViewModel::class.java)) {
             val db = AppDatabase.getDatabase(application)
-            val repository = CashierRepository(db.productDao(), db.transactionDao(), db.categoryDao())
+            val repository = CashierRepository(db.productDao(), db.transactionDao(), db.categoryDao(), db.userProfileDao())
             @Suppress("UNCHECKED_CAST")
             return CashierViewModel(repository) as T
         }

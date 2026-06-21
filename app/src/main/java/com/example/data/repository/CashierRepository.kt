@@ -3,20 +3,27 @@ package com.example.data.repository
 import com.example.data.dao.ProductDao
 import com.example.data.dao.TransactionDao
 import com.example.data.dao.CategoryDao
+import com.example.data.dao.UserProfileDao
 import com.example.data.entity.Product
 import com.example.data.entity.Transaction
 import com.example.data.entity.TransactionItem
 import com.example.data.entity.Category
+import com.example.data.entity.UserProfile
 import kotlinx.coroutines.flow.Flow
 
 class CashierRepository(
     private val productDao: ProductDao,
     private val transactionDao: TransactionDao,
-    private val categoryDao: CategoryDao
+    private val categoryDao: CategoryDao,
+    private val userProfileDao: UserProfileDao
 ) {
     val allProducts: Flow<List<Product>> = productDao.getAllProducts()
     val allTransactions: Flow<List<Transaction>> = transactionDao.getAllTransactions()
     val allCategories: Flow<List<Category>> = categoryDao.getAllCategories()
+    val userProfile: Flow<UserProfile?> = userProfileDao.getUserProfile()
+
+    suspend fun insertOrUpdateProfile(profile: UserProfile) =
+        userProfileDao.insertOrUpdateProfile(profile)
 
     suspend fun insertCategory(category: Category) =
         categoryDao.insertCategory(category)

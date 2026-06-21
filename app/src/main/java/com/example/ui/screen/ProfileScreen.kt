@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -42,9 +43,10 @@ fun ProfileScreen(
     viewModel: CashierViewModel,
     modifier: Modifier = Modifier
 ) {
-    val storeName by viewModel.storeName.collectAsState()
-    val storeAddress by viewModel.storeAddress.collectAsState()
-    val cashierName by viewModel.cashierName.collectAsState()
+    val storeName by viewModel.draftStoreName.collectAsState()
+    val storeAddress by viewModel.draftStoreAddress.collectAsState()
+    val cashierName by viewModel.draftCashierName.collectAsState()
+    val isProfileChanged by viewModel.isProfileChanged.collectAsState()
 
     val scrollState = rememberScrollState()
 
@@ -85,7 +87,7 @@ fun ProfileScreen(
 
                 OutlinedTextField(
                     value = cashierName,
-                    onValueChange = { viewModel.updateCashierName(it) },
+                    onValueChange = { viewModel.updateDraftCashierName(it) },
                     label = { Text("Nama Kasir") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -93,7 +95,7 @@ fun ProfileScreen(
 
                 OutlinedTextField(
                     value = storeName,
-                    onValueChange = { viewModel.updateStoreName(it) },
+                    onValueChange = { viewModel.updateDraftStoreName(it) },
                     label = { Text("Nama Toko") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -101,11 +103,22 @@ fun ProfileScreen(
 
                 OutlinedTextField(
                     value = storeAddress,
-                    onValueChange = { viewModel.updateStoreAddress(it) },
+                    onValueChange = { viewModel.updateDraftStoreAddress(it) },
                     label = { Text("Alamat / Lokasi Toko") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Button(
+                    onClick = { viewModel.saveProfile() },
+                    enabled = isProfileChanged,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Text(
+                        "Simpan Perubahan",
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
             }
         }
 

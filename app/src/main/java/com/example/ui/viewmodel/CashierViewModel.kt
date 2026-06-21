@@ -6,6 +6,7 @@ import com.example.data.entity.Product
 import com.example.data.entity.Transaction
 import com.example.data.entity.TransactionItem
 import com.example.data.entity.Category
+import com.example.data.entity.UserProfile
 import com.example.data.repository.CartItemModel
 import com.example.data.repository.CashierRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,26 +27,86 @@ import java.util.Locale
 
 class CashierViewModel(private val repository: CashierRepository) : ViewModel() {
 
-    // --- STORE & PROFILE SETTINGS ---
-    private val _storeName = MutableStateFlow("Easy Cashier")
-    val storeName = _storeName.asStateFlow()
+    // --- STORE & PROFILE SETTINGS (ROOM PERSISTED) ---
+    val userProfile: StateFlow<UserProfile> = repository.userProfile
+        .map { it ?: UserProfile(storeName = "Easy Cashier", storeAddress = "Kota Bandung, Jawa Barat", cashierName = "Leonard / Rezha") }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = UserProfile(storeName = "Easy Cashier", storeAddress = "Kota Bandung, Jawa Barat", cashierName = "Leonard / Rezha")
+        )
 
-    private val _storeAddress = MutableStateFlow("Kota Bandung, Jawa Barat")
-    val storeAddress = _storeAddress.asStateFlow()
+    val storeName: StateFlow<String> = userProfile
+        .map { it.storeName }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "Easy Cashier"
+        )
 
-    private val _cashierName = MutableStateFlow("Leonard / Rezha")
-    val cashierName = _cashierName.asStateFlow()
+    val storeAddress: StateFlow<String> = userProfile
+        .map { it.storeAddress }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "Kota Bandung, Jawa Barat"
+        )
 
-    fun updateStoreName(name: String) {
-        _storeName.value = name.trim()
+    val cashierName: StateFlow<String> = userProfile
+        .map { it.cashierName }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "Leonard / Rezha"
+        )
+
+    // --- DRAFT/EDITING STATE ---
+    private val _draftStoreName = MutableStateFlow("")
+    val draftStoreName = _draftStoreName.asStateFlow()
+
+    private val _draftStoreAddress = MutableStateFlow("")
+    val draftStoreAddress = _draftStoreAddress.asStateFlow()
+
+    private val _draftCashierName = MutableStateFlow("")
+    val draftCashierName = _draftCashierName.asStateFlow()
+
+    fun updateDraftStoreName(name: String) {
+        _draftStoreName.value = name
     }
 
-    fun updateStoreAddress(address: String) {
-        _storeAddress.value = address.trim()
+    fun updateDraftStoreAddress(address: String) {
+        _draftStoreAddress.value = address
     }
 
-    fun updateCashierName(name: String) {
-        _cashierName.value = name.trim()
+    fun updateDraftCashierName(name: String) {
+        _draftCashierName.value = name
+    }
+
+    // Reactive check if profile draft differs from saved database state
+    val isProfileChanged: StateFlow<Boolean> = combine(
+        userProfile,
+        draftStoreName,
+        draftStoreAddress,
+        draftCashierName
+    ) { profile, draftName, draftAddr, draftCashier ->
+        profile.storeName != draftName.trim() ||
+        profile.storeAddress != draftAddr.trim() ||
+        profile.cashierName != draftCashier.trim()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+
+    fun saveProfile() {
+        viewModelScope.launch {
+            val updatedProfile = UserProfile(
+                storeName = _draftStoreName.value.trim(),
+                storeAddress = _draftStoreAddress.value.trim(),
+                cashierName = _draftCashierName.value.trim()
+            )
+            repository.insertOrUpdateProfile(updatedProfile)
+        }
     }
 
     // --- DYNAMIC CATEGORIES ---
@@ -353,9 +414,15 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         }
     }
 
-    // --- NO SEED DATABASE ---
     init {
-        // App starts with clean/empty product and category lists
+        // Collect user profile and pre-fill draft states
+        viewModelScope.launch {
+            userProfile.collect { profile ->
+                _draftStoreName.value = profile.storeName
+                _draftStoreAddress.value = profile.storeAddress
+                _draftCashierName.value = profile.cashierName
+            }
+        }
     }
 
     // --- UTILITY FORMATTERS ---

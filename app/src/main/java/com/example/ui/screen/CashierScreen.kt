@@ -776,9 +776,13 @@ fun ReceiptDialog(
     viewModel: CashierViewModel,
     onDismiss: () -> Unit
 ) {
-    val storeName by viewModel.storeName.collectAsState()
-    val storeAddress by viewModel.storeAddress.collectAsState()
-    val cashierName by viewModel.cashierName.collectAsState()
+    val currentStoreName by viewModel.storeName.collectAsState()
+    val currentStoreAddress by viewModel.storeAddress.collectAsState()
+    val currentCashierName by viewModel.cashierName.collectAsState()
+
+    val storeName = transaction.storeName.ifBlank { currentStoreName }
+    val storeAddress = transaction.storeAddress.ifBlank { currentStoreAddress }
+    val cashierName = transaction.cashierName.ifBlank { currentCashierName }
 
     Dialog(
         onDismissRequest = { onDismiss() },

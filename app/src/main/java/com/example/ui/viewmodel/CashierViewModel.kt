@@ -283,13 +283,17 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
 
         val change = paidAmount - total
         val itemsInCart = _cartItems.value
+        val activeProfile = userProfile.value
 
         viewModelScope.launch {
             val transaction = repository.executeCheckout(
                 totalAmount = total,
                 cashPaid = paidAmount,
                 changeAmount = change,
-                cartItems = itemsInCart
+                cartItems = itemsInCart,
+                storeName = activeProfile.storeName,
+                storeAddress = activeProfile.storeAddress,
+                cashierName = activeProfile.cashierName
             )
             // Query final items stored in db to ensure correct primary keys
             val dbItems = repository.getTransactionItems(transaction.id)

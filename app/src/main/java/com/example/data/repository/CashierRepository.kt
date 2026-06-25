@@ -56,14 +56,20 @@ class CashierRepository(
         totalAmount: Double,
         cashPaid: Double,
         changeAmount: Double,
-        cartItems: List<CartItemModel>
+        cartItems: List<CartItemModel>,
+        storeName: String,
+        storeAddress: String,
+        cashierName: String
     ): Transaction {
         val timestamp = System.currentTimeMillis()
         val trans = Transaction(
             timestamp = timestamp,
             totalAmount = totalAmount,
             cashPaid = cashPaid,
-            changeAmount = changeAmount
+            changeAmount = changeAmount,
+            storeName = storeName,
+            storeAddress = storeAddress,
+            cashierName = cashierName
         )
         // Store transaction to SQLite and retrieve generated primary key
         val transIdLong = transactionDao.insertTransaction(trans)

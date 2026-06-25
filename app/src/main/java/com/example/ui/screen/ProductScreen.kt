@@ -1,8 +1,13 @@
 package com.example.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -10,12 +15,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -45,7 +52,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -54,7 +60,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -79,7 +84,7 @@ fun ProductScreen(
     val products by viewModel.products.collectAsState()
     val categoriesList by viewModel.customCategories.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-    var activeTab by remember { mutableIntStateOf(0) } // 0 = Produk, 1 = Kategori
+    var activeTab by remember { mutableStateOf(0) } // 0 = Produk, 1 = Kategori
 
     val filteredProducts = remember(products, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -573,7 +578,7 @@ fun ProductScreen(
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline
                             ),
                             modifier = Modifier
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                .menuAnchor()
                                 .fillMaxWidth()
                                 .testTag("product_category_dropdown")
                         )
@@ -926,35 +931,33 @@ fun SlidingTabs(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(32.dp))
             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
             .padding(4.dp)
     ) {
-        val indicatorOffset by animateFloatAsState(
-            targetValue = selectedTab.toFloat(),
-            animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f),
+        val totalWidth = maxWidth
+        val tabWidth = totalWidth / tabs.size
+        
+        val indicatorOffset by animateDpAsState(
+            targetValue = tabWidth * selectedTab,
+            animationSpec = spring(
+                dampingRatio = 0.82f,
+                stiffness = 380f
+            ),
             label = "IndicatorOffset"
         )
-
-        Row(modifier = Modifier.fillMaxWidth()) {
-            if (indicatorOffset > 0f) {
-                Spacer(modifier = Modifier.weight(indicatorOffset))
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(40.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-            )
-            val trailWeight = tabs.size - 1 - indicatorOffset
-            if (trailWeight > 0f) {
-                Spacer(modifier = Modifier.weight(trailWeight))
-            }
-        }
+        
+        Box(
+            modifier = Modifier
+                .width(tabWidth)
+                .height(40.dp)
+                .offset(x = indicatorOffset)
+                .clip(RoundedCornerShape(28.dp))
+                .background(MaterialTheme.colorScheme.primary)
+        )
         
         Row(
             modifier = Modifier.fillMaxWidth(),

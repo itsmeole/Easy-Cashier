@@ -56,6 +56,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -67,6 +68,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -85,6 +87,7 @@ fun ProductScreen(
     val categoriesList by viewModel.customCategories.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var activeTab by remember { mutableStateOf(0) } // 0 = Produk, 1 = Kategori
+    val focusManager = LocalFocusManager.current
 
     val filteredProducts = remember(products, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -179,6 +182,12 @@ fun ProductScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    focusManager.clearFocus()
+                }
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {

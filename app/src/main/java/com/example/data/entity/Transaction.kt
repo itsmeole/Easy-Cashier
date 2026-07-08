@@ -9,5 +9,8 @@ data class Transaction(
     val timestamp: Long,
     val totalAmount: Double,
     val cashPaid: Double,
-    val changeAmount: Double
+    val changeAmount: Double,
+    val storeName: String = "",
+    val storeAddress: String = "",
+    val cashierName: String = ""
 )

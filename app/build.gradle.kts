@@ -4,6 +4,7 @@ plugins {
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -56,6 +57,9 @@ android {
     buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files

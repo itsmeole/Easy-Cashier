@@ -1,0 +1,15 @@
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\DOKUMENTASI_KODE.md
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\DOKUMENTASI_SISTEM (1).md
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\README.md
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\drawable\biru_modern_logo_warung_kopi.png
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-hdpi\ic_launcher.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-hdpi\ic_launcher_round.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-mdpi\ic_launcher.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-mdpi\ic_launcher_round.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-xhdpi\ic_launcher.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-xhdpi\ic_launcher_round.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-xxhdpi\ic_launcher.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-xxhdpi\ic_launcher_round.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-xxxhdpi\ic_launcher.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\main\res\mipmap-xxxhdpi\ic_launcher_round.webp
+C:\KULIAH\Personal\easy-cashier\Easy-Cashier\app\src\test\screenshots\greeting.png

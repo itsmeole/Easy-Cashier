@@ -2,7 +2,7 @@ package com.example.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -52,6 +52,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -68,6 +69,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -587,7 +589,7 @@ fun ProductScreen(
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline
                             ),
                             modifier = Modifier
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                                 .fillMaxWidth()
                                 .testTag("product_category_dropdown")
                         )
@@ -940,30 +942,29 @@ fun SlidingTabs(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints(
+    val animatedTab by animateFloatAsState(
+        targetValue = selectedTab.toFloat(),
+        animationSpec = spring(
+            dampingRatio = 0.82f,
+            stiffness = 380f
+        ),
+        label = "IndicatorOffset"
+    )
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(32.dp))
             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
             .padding(4.dp)
     ) {
-        val totalWidth = maxWidth
-        val tabWidth = totalWidth / tabs.size
-        
-        val indicatorOffset by animateDpAsState(
-            targetValue = tabWidth * selectedTab,
-            animationSpec = spring(
-                dampingRatio = 0.82f,
-                stiffness = 380f
-            ),
-            label = "IndicatorOffset"
-        )
-        
         Box(
             modifier = Modifier
-                .width(tabWidth)
+                .fillMaxWidth(if (tabs.isNotEmpty()) 1f / tabs.size else 1f)
                 .height(40.dp)
-                .offset(x = indicatorOffset)
+                .graphicsLayer {
+                    translationX = size.width * animatedTab
+                }
                 .clip(RoundedCornerShape(28.dp))
                 .background(MaterialTheme.colorScheme.primary)
         )
@@ -973,30 +974,32 @@ fun SlidingTabs(
             verticalAlignment = Alignment.CenterVertically
         ) {
             tabs.forEachIndexed { index, text ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(28.dp))
-                        .clickable { onTabSelected(index) }
-                        .testTag("tab_button_$index"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val textColor by animateColorAsState(
-                        targetValue = if (selectedTab == index) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                        label = "TextColor"
-                    )
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = textColor
+                androidx.compose.runtime.key(index) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(28.dp))
+                            .clickable { onTabSelected(index) }
+                            .testTag("tab_button_$index"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val textColor by animateColorAsState(
+                            targetValue = if (selectedTab == index) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            label = "TextColor"
                         )
-                    )
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                        )
+                    }
                 }
             }
         }

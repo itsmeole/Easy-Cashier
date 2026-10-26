@@ -1,0 +1,242 @@
+{
+  ".github/modernize/java-upgrade/hooks/scripts/recordToolUse.ps1": {
+    "mtime": 1782179779.4011607,
+    "ast_hash": "9ecf230451dfd20ff4e0a2a01e80a4e6",
+    "semantic_hash": "9ecf230451dfd20ff4e0a2a01e80a4e6"
+  },
+  ".github/modernize/java-upgrade/hooks/scripts/recordToolUse.sh": {
+    "mtime": 1782179779.404436,
+    "ast_hash": "e25ae501603ce6bf738198f5ce32ba83",
+    "semantic_hash": "e25ae501603ce6bf738198f5ce32ba83"
+  },
+  "app/build.gradle.kts": {
+    "mtime": 1783475071.9896493,
+    "ast_hash": "5698f52db0a2956695a15f0a3ceddc62",
+    "semantic_hash": "5698f52db0a2956695a15f0a3ceddc62"
+  },
+  "app/src/androidTest/java/com/example/ExampleInstrumentedTest.kt": {
+    "mtime": 1782176714.3885236,
+    "ast_hash": "72919e5ced601296d727426e01aff14b",
+    "semantic_hash": "72919e5ced601296d727426e01aff14b"
+  },
+  "app/src/main/java/com/example/MainActivity.kt": {
+    "mtime": 1782176714.3905869,
+    "ast_hash": "d2c340ae41b52f6def56a15156cd27fd",
+    "semantic_hash": "d2c340ae41b52f6def56a15156cd27fd"
+  },
+  "app/src/main/java/com/example/data/dao/CategoryDao.kt": {
+    "mtime": 1782176714.3920434,
+    "ast_hash": "71e936ce36ad7206cca619ab02da9f30",
+    "semantic_hash": "71e936ce36ad7206cca619ab02da9f30"
+  },
+  "app/src/main/java/com/example/data/dao/ProductDao.kt": {
+    "mtime": 1782176714.3920434,
+    "ast_hash": "03a6764ae7576375fc4c991fb58cfe2a",
+    "semantic_hash": "03a6764ae7576375fc4c991fb58cfe2a"
+  },
+  "app/src/main/java/com/example/data/dao/TransactionDao.kt": {
+    "mtime": 1782176714.3920434,
+    "ast_hash": "4b4ff3369ce97be034310a0ea1cd4914",
+    "semantic_hash": "4b4ff3369ce97be034310a0ea1cd4914"
+  },
+  "app/src/main/java/com/example/data/dao/UserProfileDao.kt": {
+    "mtime": 1782176714.3920434,
+    "ast_hash": "52d0bc1ac6a3fa46da294b6b3895ce1e",
+    "semantic_hash": "52d0bc1ac6a3fa46da294b6b3895ce1e"
+  },
+  "app/src/main/java/com/example/data/database/AppDatabase.kt": {
+    "mtime": 1783473472.9776223,
+    "ast_hash": "7303764e9399cb70b979f846cbc1ea3c",
+    "semantic_hash": "7303764e9399cb70b979f846cbc1ea3c"
+  },
+  "app/src/main/java/com/example/data/entity/Category.kt": {
+    "mtime": 1782176714.3950026,
+    "ast_hash": "51357705a24f75e6f45631517025696d",
+    "semantic_hash": "51357705a24f75e6f45631517025696d"
+  },
+  "app/src/main/java/com/example/data/entity/Product.kt": {
+    "mtime": 1782176714.3950026,
+    "ast_hash": "8cc85736b8fd15004b51fc06a34c1cb4",
+    "semantic_hash": "8cc85736b8fd15004b51fc06a34c1cb4"
+  },
+  "app/src/main/java/com/example/data/entity/Transaction.kt": {
+    "mtime": 1783473472.9790685,
+    "ast_hash": "a83027f708823381c26d73de002207dd",
+    "semantic_hash": "a83027f708823381c26d73de002207dd"
+  },
+  "app/src/main/java/com/example/data/entity/TransactionItem.kt": {
+    "mtime": 1782176714.3962445,
+    "ast_hash": "889dccbbb014c50fb2af32df2494071e",
+    "semantic_hash": "889dccbbb014c50fb2af32df2494071e"
+  },
+  "app/src/main/java/com/example/data/entity/UserProfile.kt": {
+    "mtime": 1782176714.3962445,
+    "ast_hash": "c65d760410c9e1014a1a0589b3698728",
+    "semantic_hash": "c65d760410c9e1014a1a0589b3698728"
+  },
+  "app/src/main/java/com/example/data/repository/CashierRepository.kt": {
+    "mtime": 1783473472.9800694,
+    "ast_hash": "6d3b2966f6eb39ccf6abb8a8e4c7c1b3",
+    "semantic_hash": "6d3b2966f6eb39ccf6abb8a8e4c7c1b3"
+  },
+  "app/src/main/java/com/example/ui/screen/CashierScreen.kt": {
+    "mtime": 1783473472.982311,
+    "ast_hash": "fe6ab2ecfda65dbeab9c8e07ee509b3a",
+    "semantic_hash": "fe6ab2ecfda65dbeab9c8e07ee509b3a"
+  },
+  "app/src/main/java/com/example/ui/screen/MainScreen.kt": {
+    "mtime": 1782176714.3998513,
+    "ast_hash": "738719b4047863d7177edd102d8f7857",
+    "semantic_hash": "738719b4047863d7177edd102d8f7857"
+  },
+  "app/src/main/java/com/example/ui/screen/ProductScreen.kt": {
+    "mtime": 1783475943.5427625,
+    "ast_hash": "e52e2ab5baa9ec6cf0b431f293c60a8a",
+    "semantic_hash": "e52e2ab5baa9ec6cf0b431f293c60a8a"
+  },
+  "app/src/main/java/com/example/ui/screen/ProfileScreen.kt": {
+    "mtime": 1783473472.986155,
+    "ast_hash": "2ffe32115b2bbb040860025c0f28d54c",
+    "semantic_hash": "2ffe32115b2bbb040860025c0f28d54c"
+  },
+  "app/src/main/java/com/example/ui/screen/ReportScreen.kt": {
+    "mtime": 1782176714.4021223,
+    "ast_hash": "b271ce62f0f8b26dd360a08d134397a9",
+    "semantic_hash": "b271ce62f0f8b26dd360a08d134397a9"
+  },
+  "app/src/main/java/com/example/ui/theme/Color.kt": {
+    "mtime": 1782176714.4031339,
+    "ast_hash": "edce455db199c3259960717a34eddb1d",
+    "semantic_hash": "edce455db199c3259960717a34eddb1d"
+  },
+  "app/src/main/java/com/example/ui/theme/Theme.kt": {
+    "mtime": 1782176714.4031339,
+    "ast_hash": "e96ed18a5f132a6c6c0c462972cbdfe5",
+    "semantic_hash": "e96ed18a5f132a6c6c0c462972cbdfe5"
+  },
+  "app/src/main/java/com/example/ui/theme/Type.kt": {
+    "mtime": 1783474118.4514453,
+    "ast_hash": "b4daa2314d1bd92bccc4c27c2f8c3c2f",
+    "semantic_hash": "b4daa2314d1bd92bccc4c27c2f8c3c2f"
+  },
+  "app/src/main/java/com/example/ui/viewmodel/CashierViewModel.kt": {
+    "mtime": 1783473472.987152,
+    "ast_hash": "62949e301b604b8e88fd5a211a1a8931",
+    "semantic_hash": "62949e301b604b8e88fd5a211a1a8931"
+  },
+  "app/src/main/java/com/example/ui/viewmodel/CashierViewModelFactory.kt": {
+    "mtime": 1782176714.4054458,
+    "ast_hash": "91c6c13897c22fc3f357cdc1d3443bde",
+    "semantic_hash": "91c6c13897c22fc3f357cdc1d3443bde"
+  },
+  "app/src/test/java/com/example/ExampleRobolectricTest.kt": {
+    "mtime": 1782176714.4146788,
+    "ast_hash": "383106bbbf091b5ef964aefdf0db5fdf",
+    "semantic_hash": "383106bbbf091b5ef964aefdf0db5fdf"
+  },
+  "app/src/test/java/com/example/ExampleUnitTest.kt": {
+    "mtime": 1782176714.4146788,
+    "ast_hash": "f6eab7bf222c53b3e8aee6032ff02638",
+    "semantic_hash": "f6eab7bf222c53b3e8aee6032ff02638"
+  },
+  "app/src/test/java/com/example/GreetingScreenshotTest.kt": {
+    "mtime": 1782176714.4146788,
+    "ast_hash": "f8fcbf7a166974e79be62414477db2ac",
+    "semantic_hash": "f8fcbf7a166974e79be62414477db2ac"
+  },
+  "build.gradle.kts": {
+    "mtime": 1783475071.8407712,
+    "ast_hash": "fdfc58ace09bb3714e07f91b2337a5b6",
+    "semantic_hash": "fdfc58ace09bb3714e07f91b2337a5b6"
+  },
+  "gradlew": {
+    "mtime": 1782176805.1561654,
+    "ast_hash": "1b55ea5b0e5fc1eb95371fb67272795f",
+    "semantic_hash": "1b55ea5b0e5fc1eb95371fb67272795f"
+  },
+  "metadata.json": {
+    "mtime": 1782176714.4172056,
+    "ast_hash": "34002562332e13ee9d409e6caa6c5ed9",
+    "semantic_hash": "34002562332e13ee9d409e6caa6c5ed9"
+  },
+  "settings.gradle.kts": {
+    "mtime": 1782176714.4172056,
+    "ast_hash": "ad272f4f12ce97a5032a6416a1992ae8",
+    "semantic_hash": "ad272f4f12ce97a5032a6416a1992ae8"
+  },
+  "DOKUMENTASI_KODE.md": {
+    "mtime": 1783473472.9733105,
+    "ast_hash": "976dd87ac21a42a19adc8db074fec9b3",
+    "semantic_hash": "976dd87ac21a42a19adc8db074fec9b3"
+  },
+  "DOKUMENTASI_SISTEM (1).md": {
+    "mtime": 1783473472.9753184,
+    "ast_hash": "d74c9c67e1a7e90c3a2bc29c48198346",
+    "semantic_hash": "d74c9c67e1a7e90c3a2bc29c48198346"
+  },
+  "README.md": {
+    "mtime": 1783473472.9766133,
+    "ast_hash": "197b069f10727d6f2a6aa4bdde4be443",
+    "semantic_hash": "197b069f10727d6f2a6aa4bdde4be443"
+  },
+  "app/src/main/res/drawable/biru_modern_logo_warung_kopi.png": {
+    "mtime": 1782176714.4064865,
+    "ast_hash": "3f1f83495b3212623c89b75a708d4b7b",
+    "semantic_hash": "3f1f83495b3212623c89b75a708d4b7b"
+  },
+  "app/src/main/res/mipmap-hdpi/ic_launcher.webp": {
+    "mtime": 1782176714.408977,
+    "ast_hash": "01b75f50a48499ac0af670e09677a0bf",
+    "semantic_hash": "01b75f50a48499ac0af670e09677a0bf"
+  },
+  "app/src/main/res/mipmap-hdpi/ic_launcher_round.webp": {
+    "mtime": 1782176714.408977,
+    "ast_hash": "a28d52b04be2753cfb57df242a71fbc5",
+    "semantic_hash": "a28d52b04be2753cfb57df242a71fbc5"
+  },
+  "app/src/main/res/mipmap-mdpi/ic_launcher.webp": {
+    "mtime": 1782176714.408977,
+    "ast_hash": "3e521fc72dc1944518c76d3757a654f1",
+    "semantic_hash": "3e521fc72dc1944518c76d3757a654f1"
+  },
+  "app/src/main/res/mipmap-mdpi/ic_launcher_round.webp": {
+    "mtime": 1782176714.408977,
+    "ast_hash": "fe4fe17c3b7cb0ac2f438dca952c26b1",
+    "semantic_hash": "fe4fe17c3b7cb0ac2f438dca952c26b1"
+  },
+  "app/src/main/res/mipmap-xhdpi/ic_launcher.webp": {
+    "mtime": 1782176714.4103346,
+    "ast_hash": "d5db31435f410a7293bd200845e64961",
+    "semantic_hash": "d5db31435f410a7293bd200845e64961"
+  },
+  "app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp": {
+    "mtime": 1782176714.4103346,
+    "ast_hash": "b42944ecf2331d0ef80a251035c6f86c",
+    "semantic_hash": "b42944ecf2331d0ef80a251035c6f86c"
+  },
+  "app/src/main/res/mipmap-xxhdpi/ic_launcher.webp": {
+    "mtime": 1782176714.4103346,
+    "ast_hash": "e443ce556842474ef6080056f2b16c4e",
+    "semantic_hash": "e443ce556842474ef6080056f2b16c4e"
+  },
+  "app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp": {
+    "mtime": 1782176714.4103346,
+    "ast_hash": "11b466294043a950fec49f7cd7ec3755",
+    "semantic_hash": "11b466294043a950fec49f7cd7ec3755"
+  },
+  "app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp": {
+    "mtime": 1782176714.4118207,
+    "ast_hash": "55e6173e7de6571d6dd49c4136151467",
+    "semantic_hash": "55e6173e7de6571d6dd49c4136151467"
+  },
+  "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp": {
+    "mtime": 1782176714.4118207,
+    "ast_hash": "f8ce10d1f6cc6386a15defbd2a3e83b8",
+    "semantic_hash": "f8ce10d1f6cc6386a15defbd2a3e83b8"
+  },
+  "app/src/test/screenshots/greeting.png": {
+    "mtime": 1782176714.4146788,
+    "ast_hash": "8262a4a927eb65aca1bd155bf1d314b2",
+    "semantic_hash": "8262a4a927eb65aca1bd155bf1d314b2"
+  }
+}

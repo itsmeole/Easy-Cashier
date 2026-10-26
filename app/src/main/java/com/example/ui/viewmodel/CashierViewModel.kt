@@ -82,7 +82,7 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         _draftCashierName.value = name
     }
 
-    // Reactive check if profile draft differs from saved database state
+    //  if profile change
     val isProfileChanged: StateFlow<Boolean> = combine(
         userProfile,
         draftStoreName,
@@ -323,10 +323,10 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
     fun setCustomDateRange(start: Long, end: Long) {
         _customStartDate.value = start
         _customEndDate.value = end
-        _reportFilterType.value = 4 // Switch to Custom
+        _reportFilterType.value = 4
     }
 
-    // Dynamic flow listing only filtered sales transactions
+    
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val filteredTransactions: StateFlow<List<Transaction>> = combine(
         _reportFilterType,
@@ -340,7 +340,7 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         cal.set(Calendar.MILLISECOND, 0)
 
         when (type) {
-            0 -> { // Hari Ini (Today)
+            0 -> { // Hari Ini 
                 val start = cal.timeInMillis
                 cal.set(Calendar.HOUR_OF_DAY, 23)
                 cal.set(Calendar.MINUTE, 59)
@@ -358,12 +358,11 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
                 Pair(start, System.currentTimeMillis())
             }
             4 -> { // Kustom
-                // Ensure correct day coverage for Custom Start/End
                 val calStart = Calendar.getInstance().apply { timeInMillis = customStart; set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0) }
                 val calEnd = Calendar.getInstance().apply { timeInMillis = customEnd; set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59) }
                 Pair(calStart.timeInMillis, calEnd.timeInMillis)
             }
-            else -> { // Semua Waktu (All Time)
+            else -> { // Semua Waktu
                 Pair(0L, Long.MAX_VALUE)
             }
         }
@@ -379,10 +378,13 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
         initialValue = emptyList()
     )
 
-    // Retrieve list of transaction item lines for drawing a historic item inside Report Screen
+
+    // Data diload ketika item diperluas
     suspend fun loadTransactionItems(transactionId: Int): List<TransactionItem> {
         return repository.getTransactionItems(transactionId)
     }
+
+
 
     // --- PRODUCT EDITING / ADDING OPERATIONS ---
     fun addProduct(name: String, price: Double, category: String, modifierMenu: String) {

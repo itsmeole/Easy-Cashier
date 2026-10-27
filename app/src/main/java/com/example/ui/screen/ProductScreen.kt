@@ -27,23 +27,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -53,10 +59,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,18 +96,26 @@ fun ProductScreen(
 ) {
     val products by viewModel.products.collectAsState()
     val categoriesList by viewModel.customCategories.collectAsState()
+    val allCategoriesFromVm by viewModel.allCategories.collectAsState()
+    val categoryFilterOptions = listOf("Semua") + allCategoriesFromVm
+    var selectedCategoryFilter by remember { mutableStateOf("Semua") }
     var searchQuery by remember { mutableStateOf("") }
     var activeTab by remember { mutableStateOf(0) } // 0 = Produk, 1 = Kategori
     val focusManager = LocalFocusManager.current
 
-    val filteredProducts = remember(products, searchQuery) {
-        if (searchQuery.isBlank()) {
+    val filteredProducts = remember(products, searchQuery, selectedCategoryFilter) {
+        val searched = if (searchQuery.isBlank()) {
             products
         } else {
             products.filter {
                 it.name.contains(searchQuery, ignoreCase = true) ||
                 it.category.contains(searchQuery, ignoreCase = true)
             }
+        }
+        if (selectedCategoryFilter == "Semua") {
+            searched
+        } else {
+            searched.filter { it.category.equals(selectedCategoryFilter, ignoreCase = true) }
         }
     }
     
@@ -265,6 +282,37 @@ fun ProductScreen(
                         shape = RoundedCornerShape(30.dp)
                     )
 
+                    // Category Chips Selector
+                    LazyRow(
+                        modifier = Modifier.padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(categoryFilterOptions) { cat ->
+                            val isSelected = selectedCategoryFilter == cat
+                            val chipBg = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                            val chipText = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
+                            val borderStroke = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
+                            Surface(
+                                modifier = Modifier
+                                    .clickable { selectedCategoryFilter = cat }
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .testTag("product_category_chip_$cat"),
+                                color = chipBg,
+                                border = borderStroke,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = cat,
+                                    color = chipText,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                            }
+                        }
+                    }
+
                     if (filteredProducts.isEmpty()) {
                         Box(
                             modifier = Modifier
@@ -320,22 +368,6 @@ fun ProductScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                                            ) {
-                                                Text(
-                                                    text = product.category,
-                                                    fontSize = 10.sp,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-
-                                            Spacer(modifier = Modifier.height(4.dp))
-
                                             Text(
                                                 text = product.name,
                                                 fontSize = 16.sp,
@@ -362,29 +394,58 @@ fun ProductScreen(
                                             }
                                         }
 
-                                        // Manage buttons
-                                        Row {
+                                        // 3-dots vertical options button
+                                        Box {
+                                            var menuExpanded by remember { mutableStateOf(false) }
+
                                             IconButton(
-                                                onClick = { openEditDialog(product) },
-                                                modifier = Modifier.testTag("edit_product_${product.id}")
+                                                onClick = { menuExpanded = true },
+                                                modifier = Modifier.testTag("more_menu_product_${product.id}")
                                             ) {
                                                 Icon(
-                                                    imageVector = Icons.Default.Edit,
-                                                    contentDescription = "Edit",
-                                                    tint = MaterialTheme.colorScheme.primary
+                                                    imageVector = Icons.Default.MoreVert,
+                                                    contentDescription = "Opsi Produk",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
-                                            IconButton(
-                                                onClick = {
-                                                    deletingProduct = product
-                                                    showDeleteProductConfirmation = true
-                                                },
-                                                modifier = Modifier.testTag("delete_product_${product.id}")
+
+                                            DropdownMenu(
+                                                expanded = menuExpanded,
+                                                onDismissRequest = { menuExpanded = false },
+                                                shape = RoundedCornerShape(12.dp)
                                             ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Hapus",
-                                                    tint = Color.Red.copy(alpha = 0.8f)
+                                                DropdownMenuItem(
+                                                    text = { Text("Edit Produk", fontWeight = FontWeight.Medium) },
+                                                    leadingIcon = {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Edit,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(18.dp)
+                                                        )
+                                                    },
+                                                    onClick = {
+                                                        menuExpanded = false
+                                                        openEditDialog(product)
+                                                    },
+                                                    modifier = Modifier.testTag("edit_product_${product.id}")
+                                                )
+                                                DropdownMenuItem(
+                                                    text = { Text("Hapus Produk", fontWeight = FontWeight.Medium, color = Color.Red) },
+                                                    leadingIcon = {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Delete,
+                                                            contentDescription = null,
+                                                            tint = Color.Red,
+                                                            modifier = Modifier.size(18.dp)
+                                                        )
+                                                    },
+                                                    onClick = {
+                                                        menuExpanded = false
+                                                        deletingProduct = product
+                                                        showDeleteProductConfirmation = true
+                                                    },
+                                                    modifier = Modifier.testTag("delete_product_${product.id}")
                                                 )
                                             }
                                         }
@@ -466,34 +527,61 @@ fun ProductScreen(
                                         )
                                     }
 
-                                    // Action buttons for custom category edit and delete
-                                    Row {
+                                    // 3-dots vertical options button for category
+                                    Box {
+                                        var menuExpanded by remember { mutableStateOf(false) }
+
                                         IconButton(
-                                            onClick = {
-                                                editingCategoryName = categoryName
-                                                tempEditCategoryName = categoryName
-                                                editCategoryError = false
-                                                showEditCategoryDialog = true
-                                            },
-                                            modifier = Modifier.testTag("edit_category_$categoryName")
+                                            onClick = { menuExpanded = true },
+                                            modifier = Modifier.testTag("more_menu_category_$categoryName")
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.Edit,
-                                                contentDescription = "Edit Kategori",
-                                                tint = MaterialTheme.colorScheme.primary
+                                                imageVector = Icons.Default.MoreVert,
+                                                contentDescription = "Opsi Kategori",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
-                                        IconButton(
-                                            onClick = {
-                                                deletingCategoryName = categoryName
-                                                showDeleteCategoryConfirmation = true
-                                            },
-                                            modifier = Modifier.testTag("delete_category_$categoryName")
+
+                                        DropdownMenu(
+                                            expanded = menuExpanded,
+                                            onDismissRequest = { menuExpanded = false },
+                                            shape = RoundedCornerShape(12.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Delete,
-                                                contentDescription = "Hapus Kategori",
-                                                tint = Color.Red.copy(alpha = 0.8f)
+                                            DropdownMenuItem(
+                                                text = { Text("Edit Kategori", fontWeight = FontWeight.Medium) },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Edit,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    editingCategoryName = categoryName
+                                                    tempEditCategoryName = categoryName
+                                                    editCategoryError = false
+                                                    showEditCategoryDialog = true
+                                                },
+                                                modifier = Modifier.testTag("edit_category_$categoryName")
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Hapus Kategori", fontWeight = FontWeight.Medium, color = Color.Red) },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = null,
+                                                        tint = Color.Red,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    deletingCategoryName = categoryName
+                                                    showDeleteCategoryConfirmation = true
+                                                },
+                                                modifier = Modifier.testTag("delete_category_$categoryName")
                                             )
                                         }
                                     }
@@ -510,299 +598,403 @@ fun ProductScreen(
     // Beautiful dynamic Segmented-like indicator slider for the tabs
     // Standard Material Theme 3 Primary & Primary Container matching project color schemes.
 
-    // Add / Edit Product Alert Dialog
+    // Add / Edit Product Modal Bottom Sheet (Laci dari bawah layar)
     if (showDialog) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var expandedDropdown by remember { mutableStateOf(false) }
 
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { showDialog = false },
-            title = {
-                Text(
-                    text = if (editingProduct == null) "Tambah Produk Baru" else "Ubah Produk",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            },
-            text = {
-                Column(
+            sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (editingProduct == null) "Tambah Produk Baru" else "Ubah Produk",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(
+                        onClick = { showDialog = false },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Tutup",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Name Field
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        nameError = it.trim().isEmpty()
+                    },
+                    label = { Text("Nama Produk") },
+                    isError = nameError,
+                    supportingText = { if (nameError) Text("Nama tidak boleh kosong") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .testTag("product_name_input")
+                )
+
+                // Price Field
+                OutlinedTextField(
+                    value = priceText,
+                    onValueChange = {
+                        priceText = it.filter { char -> char.isDigit() }
+                        priceError = priceText.isEmpty() || (priceText.toDoubleOrNull() ?: 0.0) <= 0
+                    },
+                    label = { Text("Harga (Rupiah)") },
+                    prefix = { Text("Rp ") },
+                    isError = priceError,
+                    supportingText = { if (priceError) Text("Harga harus valid") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("product_price_input")
+                )
+
+                // Category Selector Box
+                ExposedDropdownMenuBox(
+                    expanded = expandedDropdown,
+                    onExpandedChange = { expandedDropdown = !expandedDropdown }
                 ) {
-                    // Name Field
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = {
-                            name = it
-                            nameError = it.isEmpty()
-                        },
-                        label = { Text("Nama Produk") },
-                        isError = nameError,
-                        supportingText = { if (nameError) Text("Nama tidak boleh kosong") },
-                        singleLine = true,
+                        value = category,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Kategori") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDropdown) },
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         ),
                         modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
-                            .testTag("product_name_input")
+                            .testTag("product_category_dropdown")
                     )
-
-                    // Price Field
-                    OutlinedTextField(
-                        value = priceText,
-                        onValueChange = {
-                            priceText = it.filter { char -> char.isDigit() }
-                            priceError = priceText.isEmpty() || (priceText.toDoubleOrNull() ?: 0.0) <= 0
-                        },
-                        label = { Text("Harga (Rupiah)") },
-                        prefix = { Text("Rp ") },
-                        isError = priceError,
-                        supportingText = { if (priceError) Text("Harga harus valid") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("product_price_input")
-                    )
-
-                    // Category Selector Box
-                    ExposedDropdownMenuBox(
+                    ExposedDropdownMenu(
                         expanded = expandedDropdown,
-                        onExpandedChange = { expandedDropdown = !expandedDropdown }
+                        onDismissRequest = { expandedDropdown = false }
                     ) {
-                        OutlinedTextField(
-                            value = category,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Kategori") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDropdown) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                            ),
-                            modifier = Modifier
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                                .fillMaxWidth()
-                                .testTag("product_category_dropdown")
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedDropdown,
-                            onDismissRequest = { expandedDropdown = false }
-                        ) {
-                            categoriesList.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option) },
-                                    onClick = {
-                                        category = option
-                                        expandedDropdown = false
-                                    }
-                                )
-                            }
+                        categoriesList.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    category = option
+                                    expandedDropdown = false
+                                }
+                            )
                         }
                     }
-
-                    // Modifier Menu Field
-                    OutlinedTextField(
-                        value = modifierMenu,
-                        onValueChange = { modifierMenu = it },
-                        label = { Text("Menu Modifier / Pilihan Opsi") },
-                        placeholder = { Text("cth: Manis, Less Sugar, Tawar") },
-                        supportingText = { Text("Pisahkan dengan koma (,) jika lebih dari satu") },
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("product_modifier_input")
-                    )
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        nameError = name.trim().isEmpty()
-                        val priceNum = priceText.toDoubleOrNull() ?: 0.0
-                        priceError = priceText.trim().isEmpty() || priceNum <= 0
 
-                        if (!nameError && !priceError) {
-                            val productToEdit = editingProduct
-                            if (productToEdit == null) {
-                                viewModel.addProduct(
-                                    name = name,
-                                    price = priceNum,
-                                    category = category,
-                                    modifierMenu = modifierMenu
-                                )
-                            } else {
-                                viewModel.editProduct(
-                                    id = productToEdit.id,
-                                    name = name,
-                                    price = priceNum,
-                                    category = category,
-                                    modifierMenu = modifierMenu
-                                )
+                // Modifier Menu Field
+                OutlinedTextField(
+                    value = modifierMenu,
+                    onValueChange = { modifierMenu = it },
+                    label = { Text("Menu Modifier / Pilihan Opsi") },
+                    placeholder = { Text("cth: Manis, Less Sugar, Tawar") },
+                    supportingText = { Text("Pisahkan dengan koma (,) jika lebih dari satu") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("product_modifier_input")
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { showDialog = false },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Batal")
+                    }
+
+                    Button(
+                        onClick = {
+                            nameError = name.trim().isEmpty()
+                            val priceNum = priceText.toDoubleOrNull() ?: 0.0
+                            priceError = priceText.trim().isEmpty() || priceNum <= 0
+
+                            if (!nameError && !priceError) {
+                                val productToEdit = editingProduct
+                                if (productToEdit == null) {
+                                    viewModel.addProduct(
+                                        name = name,
+                                        price = priceNum,
+                                        category = category,
+                                        modifierMenu = modifierMenu
+                                    )
+                                } else {
+                                    viewModel.editProduct(
+                                        id = productToEdit.id,
+                                        name = name,
+                                        price = priceNum,
+                                        category = category,
+                                        modifierMenu = modifierMenu
+                                    )
+                                }
+                                showDialog = false
                             }
-                            showDialog = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    modifier = Modifier.testTag("submit_product_button")
-                ) {
-                    Text("Simpan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = { showDialog = false },
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text("Batal")
-                }
-            }
-        )
-    }
-
-    // Add New Category Dialog (FAB Triggered in Category Tab)
-    if (showCategoryDialog) {
-        AlertDialog(
-            onDismissRequest = { showCategoryDialog = false },
-            title = {
-                Text(
-                    text = "Tambah Kategori Baru",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = newCategoryName,
-                        onValueChange = {
-                            newCategoryName = it
-                            categoryNameError = it.isEmpty()
                         },
-                        label = { Text("Nama Kategori Baru") },
-                        isError = categoryNameError,
-                        supportingText = { if (categoryNameError) Text("Nama kategori tidak boleh kosong") },
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("new_category_name_input")
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (newCategoryName.trim().isEmpty()) {
-                            categoryNameError = true
-                        } else {
-                            viewModel.addCategory(newCategoryName)
-                            newCategoryName = ""
-                            showCategoryDialog = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Simpan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        newCategoryName = ""
-                        categoryNameError = false
-                        showCategoryDialog = false
-                    },
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Batal")
+                            .weight(1f)
+                            .testTag("submit_product_button")
+                    ) {
+                        Text("Simpan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                    }
                 }
             }
-        )
+        }
     }
 
-    // Edit Category Dialog (Ubah Kategori - Row Triggered)
-    if (showEditCategoryDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditCategoryDialog = false },
-            title = {
-                Text(
-                    text = "Ubah Kategori",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
+    // Add New Category Modal Bottom Sheet (Laci dari bawah layar)
+    if (showCategoryDialog) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+        ModalBottomSheet(
+            onDismissRequest = {
+                newCategoryName = ""
+                categoryNameError = false
+                showCategoryDialog = false
             },
-            text = {
-                Column(
+            sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Tambah Kategori Baru",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(
+                        onClick = {
+                            newCategoryName = ""
+                            categoryNameError = false
+                            showCategoryDialog = false
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Tutup",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = {
+                        newCategoryName = it
+                        categoryNameError = it.trim().isEmpty()
+                    },
+                    label = { Text("Nama Kategori Baru") },
+                    isError = categoryNameError,
+                    supportingText = { if (categoryNameError) Text("Nama kategori tidak boleh kosong") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .testTag("new_category_name_input")
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedTextField(
-                        value = tempEditCategoryName,
-                        onValueChange = {
-                            tempEditCategoryName = it
-                            editCategoryError = it.trim().isEmpty()
+                    OutlinedButton(
+                        onClick = {
+                            newCategoryName = ""
+                            categoryNameError = false
+                            showCategoryDialog = false
                         },
-                        label = { Text("Nama Kategori") },
-                        isError = editCategoryError,
-                        supportingText = { if (editCategoryError) Text("Nama kategori tidak boleh kosong") },
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        modifier = Modifier.fillMaxWidth().testTag("edit_category_name_input")
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (tempEditCategoryName.trim().isEmpty()) {
-                            editCategoryError = true
-                        } else {
-                            viewModel.editCategory(editingCategoryName, tempEditCategoryName)
-                            showEditCategoryDialog = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Simpan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = { showEditCategoryDialog = false },
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Batal")
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Batal")
+                    }
+
+                    Button(
+                        onClick = {
+                            if (newCategoryName.trim().isEmpty()) {
+                                categoryNameError = true
+                            } else {
+                                viewModel.addCategory(newCategoryName)
+                                newCategoryName = ""
+                                showCategoryDialog = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Simpan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                    }
                 }
             }
-        )
+        }
+    }
+
+    // Edit Category Modal Bottom Sheet (Laci dari bawah layar)
+    if (showEditCategoryDialog) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+        ModalBottomSheet(
+            onDismissRequest = { showEditCategoryDialog = false },
+            sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Ubah Kategori",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(
+                        onClick = { showEditCategoryDialog = false },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Tutup",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = tempEditCategoryName,
+                    onValueChange = {
+                        tempEditCategoryName = it
+                        editCategoryError = it.trim().isEmpty()
+                    },
+                    label = { Text("Nama Kategori") },
+                    isError = editCategoryError,
+                    supportingText = { if (editCategoryError) Text("Nama kategori tidak boleh kosong") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("edit_category_name_input")
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { showEditCategoryDialog = false },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Batal")
+                    }
+
+                    Button(
+                        onClick = {
+                            if (tempEditCategoryName.trim().isEmpty()) {
+                                editCategoryError = true
+                            } else {
+                                viewModel.editCategory(editingCategoryName, tempEditCategoryName)
+                                showEditCategoryDialog = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Simpan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+            }
+        }
     }
 
     // Delete Category Confirmation Dialog (Konfirmasi Hapus Kategori - Row Triggered)

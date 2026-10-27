@@ -52,6 +52,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -693,16 +694,17 @@ fun CartContent(
                         value = cashPaid,
                         onValueChange = { viewModel.updateCashPaid(it.filter { c -> c.isDigit() }) },
                         label = { Text("Bayar Cash (Rupiah)") },
-                        prefix = { Text("Rp ") },
+                        prefix = { Text("Rp ", fontWeight = FontWeight.SemiBold) },
+                        textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
                             .testTag("cash_paid_input")
                     )
 

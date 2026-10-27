@@ -52,6 +52,11 @@ class CashierRepository(
     suspend fun getTransactionItems(transactionId: Int): List<TransactionItem> =
         transactionDao.getTransactionItems(transactionId)
 
+    suspend fun getTransactionItemsForTransactions(transactionIds: List<Int>): List<TransactionItem> {
+        if (transactionIds.isEmpty()) return emptyList()
+        return transactionDao.getTransactionItemsForTransactions(transactionIds)
+    }
+
     suspend fun executeCheckout(
         totalAmount: Double,
         cashPaid: Double,

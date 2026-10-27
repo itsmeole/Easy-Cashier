@@ -32,13 +32,20 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LocalPrintshop
 import androidx.compose.material.icons.filled.MonetizationOn
+import android.widget.Toast
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
@@ -46,6 +53,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,14 +67,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.entity.Transaction
 import com.example.data.entity.TransactionItem
 import com.example.ui.viewmodel.CashierViewModel
+import com.example.util.FileExportResult
+import com.example.util.ReportFileManager
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -75,8 +87,8 @@ fun ReportScreen(
     viewModel: CashierViewModel,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
-    val dynamicTextColor = if (isDark) Color(0xFF9ECAFF) else Color.DarkGray
+    val context = LocalContext.current
+    val dynamicTextColor = Color.DarkGray
 
     val filteredTransactions by viewModel.filteredTransactions.collectAsState()
     val filterType by viewModel.reportFilterType.collectAsState()
@@ -84,6 +96,9 @@ fun ReportScreen(
     val customEnd by viewModel.customEndDate.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
+
+    var isExporting by remember { mutableStateOf(false) }
+    var exportSuccessResult by remember { mutableStateOf<FileExportResult?>(null) }
 
     // Map which tracks which transaction was expanded and loaded items
     val expandedStates = remember { mutableStateMapOf<Int, Boolean>() }
@@ -113,13 +128,77 @@ fun ReportScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Laporan Transaksi",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Laporan Transaksi",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Button(
+                onClick = {
+                    if (filteredTransactions.isEmpty()) {
+                        Toast.makeText(context, "Tidak ada data transaksi untuk diekspor", Toast.LENGTH_SHORT).show()
+                    } else {
+                        isExporting = true
+                        coroutineScope.launch {
+                            val period = viewModel.getFilterLabel(filterType, customStart, customEnd)
+                            val result = viewModel.exportReportsToExcel(context, filteredTransactions, period)
+                            isExporting = false
+                            if (result.success) {
+                                exportSuccessResult = result
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    result.errorMessage ?: "Gagal membuat laporan Excel",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6F42)),
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isExporting,
+                modifier = Modifier.testTag("btn_download_excel")
+            ) {
+                if (isExporting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Mengunduh...",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.FileDownload,
+                        contentDescription = "Unduh Excel",
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Unduh Excel",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
 
         // METRICS DASHBOARD
         Row(
@@ -562,6 +641,141 @@ fun ReportScreen(
             items = items,
             viewModel = viewModel,
             onDismiss = { reprintTransactionSelected = null }
+        )
+    }
+
+    // Dialog Sukses Download Excel
+    exportSuccessResult?.let { result ->
+        AlertDialog(
+            onDismissRequest = { exportSuccessResult = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(26.dp))
+                        .background(Color(0xFF1D6F42).copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Sukses",
+                        tint = Color(0xFF1D6F42),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Laporan Excel Berhasil Diunduh",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "File laporan telah berhasil diekspor ke format Excel (.xlsx) dan tersimpan di perangkat.",
+                        fontSize = 13.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1D6F42),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = result.fileName,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Lokasi: ${result.savedPathDisplay}",
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${filteredTransactions.size} Transaksi | Total ${viewModel.formatRupiah(totalRevenue)}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            result.file?.let { ReportFileManager.shareExcelFile(context, it) }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("btn_share_excel"),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Bagikan",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Bagikan", fontSize = 12.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            result.file?.let { ReportFileManager.openExcelFile(context, it) }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("btn_open_excel"),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6F42)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = "Buka",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Buka File", fontSize = 12.sp, color = Color.White)
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { exportSuccessResult = null },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Tutup", color = Color.Gray)
+                }
+            }
         )
     }
 }

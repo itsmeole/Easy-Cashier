@@ -1,7 +1,13 @@
 package com.example.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.util.ExcelExporter
+import com.example.util.FileExportResult
+import com.example.util.ReportFileManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.example.data.entity.Product
 import com.example.data.entity.Transaction
 import com.example.data.entity.TransactionItem
@@ -445,5 +451,45 @@ class CashierViewModel(private val repository: CashierRepository) : ViewModel() 
     fun formatDateOnly(timestamp: Long): String {
         val sdf = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
         return sdf.format(Date(timestamp))
+    }
+
+    // --- EXCEL REPORT EXPORT ---
+    suspend fun getExportItemsMap(transactions: List<Transaction>): Map<Int, List<TransactionItem>> {
+        val ids = transactions.map { it.id }
+        val allItems = repository.getTransactionItemsForTransactions(ids)
+        return allItems.groupBy { it.transactionId }
+    }
+
+    fun getFilterLabel(filterType: Int, customStart: Long, customEnd: Long): String {
+        return when (filterType) {
+            0 -> "Hari Ini (${formatDateOnly(System.currentTimeMillis())})"
+            1 -> "7 Hari Terakhir"
+            2 -> "Bulan Ini"
+            4 -> "${formatDateOnly(customStart)} - ${formatDateOnly(customEnd)}"
+            else -> "Semua Waktu"
+        }
+    }
+
+    suspend fun exportReportsToExcel(
+        context: Context,
+        transactions: List<Transaction>,
+        periodLabel: String
+    ): FileExportResult = withContext(Dispatchers.IO) {
+        val itemsMap = getExportItemsMap(transactions)
+        val profile = userProfile.value
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "Laporan_Transaksi_EasyCashier_$timeStamp.xlsx"
+
+        ReportFileManager.saveExcelReport(context, fileName) { outStream ->
+            ExcelExporter.exportToXlsx(
+                transactions = transactions,
+                itemsMap = itemsMap,
+                storeName = profile.storeName,
+                storeAddress = profile.storeAddress,
+                cashierName = profile.cashierName,
+                periodLabel = periodLabel,
+                outputStream = outStream
+            )
+        }
     }
 }

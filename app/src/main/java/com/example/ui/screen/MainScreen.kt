@@ -53,7 +53,7 @@ import com.example.ui.viewmodel.CashierViewModelFactory
 
 sealed class Screen(val id: String, val title: String, val activeIcon: ImageVector, val inactiveIcon: ImageVector) {
     object Cashier : Screen("kasir", "Kasir", Icons.Filled.PointOfSale, Icons.Outlined.PointOfSale)
-    object Products : Screen("produk", "Kelola Produk", Icons.Filled.Storefront, Icons.Outlined.Storefront)
+    object Products : Screen("produk", "Produk", Icons.Filled.Storefront, Icons.Outlined.Storefront)
     object Reports : Screen("laporan", "Laporan", Icons.Filled.ReceiptLong, Icons.Filled.ReceiptLong)
     object Profile : Screen("profile", "Profil", Icons.Filled.ManageAccounts, Icons.Outlined.ManageAccounts)
 }

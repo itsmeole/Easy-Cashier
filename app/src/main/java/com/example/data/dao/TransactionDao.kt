@@ -25,4 +25,7 @@ interface TransactionDao {
 
     @Query("SELECT * FROM transaction_items WHERE transactionId = :transactionId")
     suspend fun getTransactionItems(transactionId: Int): List<TransactionItem>
+
+    @Query("SELECT * FROM transaction_items WHERE transactionId IN (:transactionIds)")
+    suspend fun getTransactionItemsForTransactions(transactionIds: List<Int>): List<TransactionItem>
 }
